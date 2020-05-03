@@ -190,6 +190,13 @@ class Board {
     }
   }
 
+  deletePossibleNumber(cell: CellData, n: number) {
+    const updateRequired = cell.deletePossibleNumber(n)
+    if (updateRequired) {
+      this.unupdatedBox[cell.boxIdx()] = true
+    }
+  }
+
   // TODO: refactor
   getFlatCells(): CellData[] {
     const founds: CellData[] = []
@@ -202,27 +209,15 @@ class Board {
   }
 
   getBoxCells(boxIndex: number): CellData[] {
-
-    const xOffset = (boxIndex % 3) * 3;
-    const yOffset = (Math.floor(boxIndex / 3)) * 3;
-
-    return [
-      this.cells[yOffset + 0][xOffset + 0],
-      this.cells[yOffset + 0][xOffset + 1],
-      this.cells[yOffset + 0][xOffset + 2],
-
-      this.cells[yOffset + 1][xOffset + 0],
-      this.cells[yOffset + 1][xOffset + 1],
-      this.cells[yOffset + 1][xOffset + 2],
-
-      this.cells[yOffset + 2][xOffset + 0],
-      this.cells[yOffset + 2][xOffset + 1],
-      this.cells[yOffset + 2][xOffset + 2],
-    ]
+    return this.getFlatCells().filter(c => c.boxIdx() === boxIndex);
   }
 
   getBoxColumnCells(column: number): CellData[] {
     return this.getFlatCells().filter(c => c.position.column === column)
+  }
+
+  getBoxRowCells(row: number): CellData[] {
+    return this.getFlatCells().filter(c => c.position.row === row)
   }
 
   listInteractingCellsTo(cell: CellData): CellData[] {
@@ -248,12 +243,9 @@ class Board {
     this.cells.forEach(row => {
       row.forEach(interactingCell => {
         if (!cell.interacts(interactingCell)) {
-          return
+          return;
         }
-        const updateRequired = interactingCell.deletePossibleNumber(fixedNum)
-        if (updateRequired) {
-          this.unupdatedBox[interactingCell.boxIdx()] = true
-        }
+        this.deletePossibleNumber(interactingCell, fixedNum);
       })
     })
   }
@@ -293,10 +285,16 @@ class Board {
       if (colSet.size === 1) {
         this.getBoxColumnCells(Array.from(colSet.values())[0]).forEach(cell => {
           if (cell.boxIdx() === boxIndex) { return }
-          const updateRequired = cell.deletePossibleNumber(num);
-          if (updateRequired) {
-            this.unupdatedBox[cell.boxIdx()] = true
-          }
+          this.deletePossibleNumber(cell, num);
+        })
+      }
+
+      // find a fixed row
+      const rowSet = new Set(marks.map(c => c.position.row))
+      if (rowSet.size === 1) {
+        this.getBoxRowCells(Array.from(rowSet.values())[0]).forEach(cell => {
+          if (cell.boxIdx() === boxIndex) { return }
+          this.deletePossibleNumber(cell, num);
         })
       }
     })
