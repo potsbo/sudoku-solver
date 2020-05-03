@@ -190,7 +190,19 @@ class Board {
     }
   }
 
+  // TODO: refactor
+  getFlatCells(): CellData[] {
+    const founds: CellData[] = []
+    this.cells.forEach(row => {
+      row.forEach(interactingCell => {
+        founds.push(interactingCell)
+      })
+    })
+    return founds;
+  }
+
   getBoxCells(boxIndex: number): CellData[] {
+
     const xOffset = (boxIndex % 3) * 3;
     const yOffset = (Math.floor(boxIndex / 3)) * 3;
 
@@ -207,6 +219,10 @@ class Board {
       this.cells[yOffset + 2][xOffset + 1],
       this.cells[yOffset + 2][xOffset + 2],
     ]
+  }
+
+  getBoxColumnCells(column: number): CellData[] {
+    return this.getFlatCells().filter(c => c.position.column === column)
   }
 
   listInteractingCellsTo(cell: CellData): CellData[] {
@@ -259,7 +275,10 @@ class Board {
     this.unupdatedBox[boxIndex] = false
     const cells = this.getBoxCells(boxIndex)
     Array.from(Array(9).keys()).forEach(num => {
+      num++
       const marks: CellData[] = []
+
+      // fix a cell when there is only one possible cell for a number
       cells.forEach(cell => {
         if (cell.possibleNumbers.has(num)) {
           marks.push(cell)
@@ -267,6 +286,18 @@ class Board {
       });
       if (marks.length === 1) {
         this.fix(marks[0].position, num);
+      }
+
+      // find a fixed column
+      const colSet = new Set(marks.map(c => c.position.column))
+      if (colSet.size === 1) {
+        this.getBoxColumnCells(Array.from(colSet.values())[0]).forEach(cell => {
+          if (cell.boxIdx() === boxIndex) { return }
+          const updateRequired = cell.deletePossibleNumber(num);
+          if (updateRequired) {
+            this.unupdatedBox[cell.boxIdx()] = true
+          }
+        })
       }
     })
   }
