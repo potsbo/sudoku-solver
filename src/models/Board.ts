@@ -1,10 +1,22 @@
 import { CellData } from './CellData'
 
+interface Group {
+  contains: (position: CellPosition) => boolean
+  updated: boolean
+  index: number
+}
+
 class BoxData {
   updated = false
   index: number
   constructor(index: number) {
     this.index = index
+  }
+
+  contains(position: CellPosition): boolean {
+    const yBoxIdx = Math.floor(position.row / 3)
+    const xBoxIdx = Math.floor(position.column / 3)
+    return (yBoxIdx * 3 + xBoxIdx) === this.index;
   }
 }
 
@@ -15,6 +27,10 @@ class Row {
   constructor(index: number) {
     this.index = index
   }
+
+  contains(position: CellPosition): boolean {
+    return position.row === this.index
+  }
 }
 
 class Column {
@@ -24,7 +40,13 @@ class Column {
   constructor(index: number) {
     this.index = index
   }
+
+  contains(position: CellPosition): boolean {
+    return position.column === this.index
+  }
 }
+
+const Numbers = Array.from(Array(9).keys()).map(n => n + 1)
 
 class Board {
   private cells: CellData[] = []
@@ -82,6 +104,10 @@ class Board {
     if (updated) {
       this.publishUpdate(cell)
     }
+  }
+
+  private listCells(checker: Group): CellData[] {
+    return this.cells.filter(c => checker.contains(c.position))
   }
 
   private getCellAt(position: CellPosition): CellData {
@@ -149,40 +175,22 @@ class Board {
     })
   }
 
-  updateRow(index: number) {
-    this.rows[index].updated = true
-    const row = this.rows[index]
-    const cells = this.getRowCells(row.index)
-    Array.from(Array(9).keys()).map(n => n + 1).forEach(n => {
-      const boxIndices = cells
-        .filter(c => c.possibleNumbers.has(n))
-        .map(c => c.boxIdx())
-      const boxSet = new Set(boxIndices)
+  updateGroup(group: Group) {
+    group.updated = true
+    const cells = this.listCells(group)
 
-      if (boxSet.size === 1) {
-        this.getBoxCells(boxIndices[0]).filter(c => c.position.row !== index).forEach(c => {
-          this.deletePossibleNumber(c, n)
-        })
-      }
-    })
-  }
-
-  updateColumn(index: number) {
-    this.columns[index].updated = true
-    const column = this.columns[index]
-    const cells = this.getColumnCells(column.index)
-    Array.from(Array(9).keys()).map(n => n + 1).forEach(n => {
+    Numbers.forEach(n => {
       const candidateCells = cells
         .filter(c => c.possibleNumbers.has(n))
       if (candidateCells.length === 1) {
         this.fix(candidateCells[0].position, n)
       }
-      const boxIndices = candidateCells.map(c => c.boxIdx())
 
+      const boxIndices = candidateCells.map(c => c.boxIdx())
       const boxSet = new Set(boxIndices)
 
       if (boxSet.size === 1) {
-        this.getBoxCells(boxIndices[0]).filter(c => c.position.column !== index).forEach(c => {
+        this.getBoxCells(boxIndices[0]).filter(c => !group.contains(c.position)).forEach(c => {
           this.deletePossibleNumber(c, n)
         })
       }
@@ -214,11 +222,11 @@ class Board {
       this.updateBox(index)
     })
 
-    this.rows.forEach((_, index) => {
-      this.updateRow(index)
+    this.rows.forEach((row) => {
+      this.updateGroup(row)
     })
-    this.columns.forEach((_, index) => {
-      this.updateColumn(index)
+    this.columns.forEach((column) => {
+      this.updateGroup(column)
     })
   }
 }
