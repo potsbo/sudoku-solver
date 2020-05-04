@@ -344,8 +344,26 @@ const rank3Board = () => {
   return new Board(init);
 }
 
+const difficult = () => {
+  // https://cracking-the-cryptic.web.app/sudoku/497rhdJp27
+  const init = [
+    [0, 0, 4, 7, 0, 0, 0, 0, 3],
+    [0, 3, 0, 0, 6, 0, 0, 9, 0],
+    [9, 0, 0, 0, 0, 1, 8, 0, 0],
+
+    [8, 0, 0, 0, 0, 2, 5, 0, 0],
+    [0, 2, 0, 0, 7, 0, 0, 8, 0],
+    [0, 0, 1, 4, 0, 0, 0, 0, 7],
+
+    [0, 0, 9, 5, 0, 0, 0, 0, 1],
+    [0, 5, 0, 0, 1, 0, 0, 3, 0],
+    [2, 0, 0, 0, 0, 6, 7, 0, 0],
+  ]
+  return new Board(init);
+}
+
 function App() {
-  const board = rank3Board()
+  const board = difficult()
 
   while (board.updatable()) {
     board.update()
