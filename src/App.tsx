@@ -2,14 +2,14 @@ import React from 'react';
 import './App.css';
 import styled from 'styled-components'
 import { Box } from './Box'
-import { difficult } from './models/Board'
+import { rank3Board } from './models/Board'
 
 const BoxRow = styled.div`
   display: flex;
 `
 
 function App() {
-  const board = difficult()
+  const board = rank3Board()
 
   while (board.updatable()) {
     board.update()

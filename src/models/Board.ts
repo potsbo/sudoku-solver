@@ -139,37 +139,32 @@ class Board {
     return this.cells.filter(c => c.needUpdate)
   }
 
-  updateBox(boxIndex: number) {
-    this.boxes[boxIndex].updated = true
-    const cells = this.getBoxCells(boxIndex)
-    Array.from(Array(9).keys()).map(n => n + 1).forEach(num => {
-      const marks: CellData[] = []
+  updateBox(group: BoxData) {
+    group.updated = true
+    const cells = this.listCells(group)
 
+    Numbers.forEach(n => {
       // fix a cell when there is only one possible cell for a number
-      cells.forEach(cell => {
-        if (cell.possibleNumbers.has(num)) {
-          marks.push(cell)
-        }
-      });
-      if (marks.length === 1) {
-        this.fix(marks[0].position, num);
+      const candidateCells = cells.filter(c => c.possibleNumbers.has(n))
+      if (candidateCells.length === 1) {
+        this.fix(candidateCells[0].position, n);
       }
 
       // find a fixed column
-      const colSet = new Set(marks.map(c => c.position.column))
+      const colSet = new Set(candidateCells.map(c => c.position.column))
       if (colSet.size === 1) {
         this.getColumnCells(Array.from(colSet.values())[0]).forEach(cell => {
-          if (cell.boxIdx() === boxIndex) { return }
-          this.deletePossibleNumber(cell, num);
+          if (cell.boxIdx() === group.index) { return }
+          this.deletePossibleNumber(cell, n);
         })
       }
 
       // find a fixed row
-      const rowSet = new Set(marks.map(c => c.position.row))
+      const rowSet = new Set(candidateCells.map(c => c.position.row))
       if (rowSet.size === 1) {
         this.getRowCells(Array.from(rowSet.values())[0]).forEach(cell => {
-          if (cell.boxIdx() === boxIndex) { return }
-          this.deletePossibleNumber(cell, num);
+          if (cell.boxIdx() === group.index) { return }
+          this.deletePossibleNumber(cell, n);
         })
       }
     })
@@ -177,20 +172,20 @@ class Board {
 
   updateGroup(group: Group) {
     group.updated = true
+    if (true) { return }
     const cells = this.listCells(group)
 
     Numbers.forEach(n => {
-      const candidateCells = cells
-        .filter(c => c.possibleNumbers.has(n))
+      const candidateCells = cells.filter(c => c.possibleNumbers.has(n))
       if (candidateCells.length === 1) {
         this.fix(candidateCells[0].position, n)
       }
 
-      const boxIndices = candidateCells.map(c => c.boxIdx())
-      const boxSet = new Set(boxIndices)
+      const interactingGroupIndices = candidateCells.map(c => c.boxIdx())
+      const interactingGroupSet = new Set(interactingGroupIndices)
 
-      if (boxSet.size === 1) {
-        this.getBoxCells(boxIndices[0]).filter(c => !group.contains(c.position)).forEach(c => {
+      if (interactingGroupSet.size === 1) {
+        this.getBoxCells(interactingGroupIndices[0]).filter(c => !group.contains(c.position)).forEach(c => {
           this.deletePossibleNumber(c, n)
         })
       }
@@ -218,8 +213,8 @@ class Board {
       this.updatePossibilities(cell)
     })
 
-    this.boxes.forEach((_, index) => {
-      this.updateBox(index)
+    this.boxes.forEach(box => {
+      this.updateBox(box)
     })
 
     this.rows.forEach((row) => {
