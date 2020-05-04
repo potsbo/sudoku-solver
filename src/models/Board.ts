@@ -1,8 +1,9 @@
 import { CellData } from './CellData'
 
 class Board {
-  cells: CellData[][]
-  unupdatedBox: boolean[]
+  private cells: CellData[][]
+  private unupdatedBox: boolean[]
+
   constructor(initial: number[][]) {
     this.cells = getEmptyBoard()
     this.cells.forEach(row => {
@@ -88,16 +89,7 @@ class Board {
   }
 
   unupdatedCells() {
-    const ret: CellData[] = []
-    this.cells.forEach(row => {
-      row.forEach(cell => {
-        if (cell.needUpdate) {
-          ret.push(cell)
-        }
-      })
-    })
-
-    return ret
+    return this.getFlatCells().filter(c => c.needUpdate)
   }
 
   updateBox(boxIndex: number) {
