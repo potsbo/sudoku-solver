@@ -2,14 +2,14 @@ import React from 'react';
 import './App.css';
 import styled from 'styled-components'
 import { Box } from './Box'
-import { rank4Board } from './models/Board'
+import { rank5Board } from './models/Board'
 
 const BoxRow = styled.div`
   display: flex;
 `
 
 function App() {
-  const board = rank4Board()
+  const board = rank5Board()
 
   while (board.updatable()) {
     board.update()
