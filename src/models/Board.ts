@@ -1,28 +1,51 @@
 import { CellData } from './CellData'
 
-interface Group {
+interface Container {
   contains: (position: CellPosition) => boolean
-  updated: boolean
+}
+
+interface Aggregator {
+  aggregators: GroupCostructor[]
+}
+
+interface Group extends Container, Aggregator {
+  // interaction: () => [[Group]]
   index: number
 }
+
+interface StatefulGroup extends Group {
+  updated: boolean
+}
+
+type GroupCostructor = (position: CellPosition) => Group
 
 class BoxData {
   updated = false
   index: number
+
   constructor(index: number) {
     this.index = index
   }
 
   contains(position: CellPosition): boolean {
-    const yBoxIdx = Math.floor(position.row / 3)
-    const xBoxIdx = Math.floor(position.column / 3)
-    return (yBoxIdx * 3 + xBoxIdx) === this.index;
+    return positionToBoxIdx(position) === this.index;
+  }
+
+  aggregators: GroupCostructor[] = [
+    Column.Find,
+  ]
+
+  static Find(position: CellPosition): Group {
+    return new BoxData(positionToBoxIdx(position))
   }
 }
 
 class Row {
   updated = false
   index: number
+  aggregators: GroupCostructor[] = [
+    BoxData.Find
+  ]
 
   constructor(index: number) {
     this.index = index
@@ -36,6 +59,9 @@ class Row {
 class Column {
   updated = false
   index: number
+  aggregators: GroupCostructor[] = [
+    BoxData.Find
+  ]
 
   constructor(index: number) {
     this.index = index
@@ -44,8 +70,17 @@ class Column {
   contains(position: CellPosition): boolean {
     return position.column === this.index
   }
+
+  static Find(position: CellPosition): Group {
+    return new Column(position.column)
+  }
 }
 
+const positionToBoxIdx = (position: CellPosition): number => {
+  const yBoxIdx = Math.floor(position.row / 3)
+  const xBoxIdx = Math.floor(position.column / 3)
+  return (yBoxIdx * 3 + xBoxIdx)
+}
 const Numbers = Array.from(Array(9).keys()).map(n => n + 1)
 
 class Board {
@@ -106,7 +141,7 @@ class Board {
     }
   }
 
-  private listCells(checker: Group): CellData[] {
+  private listCells(checker: Container): CellData[] {
     return this.cells.filter(c => checker.contains(c.position))
   }
 
@@ -139,7 +174,7 @@ class Board {
     return this.cells.filter(c => c.needUpdate)
   }
 
-  updateBox(group: BoxData) {
+  updateGroup(group: StatefulGroup) {
     group.updated = true
     const cells = this.listCells(group)
 
@@ -151,44 +186,18 @@ class Board {
       }
 
       // find a fixed column
-      const colSet = new Set(candidateCells.map(c => c.position.column))
-      if (colSet.size === 1) {
-        this.getColumnCells(Array.from(colSet.values())[0]).forEach(cell => {
-          if (cell.boxIdx() === group.index) { return }
-          this.deletePossibleNumber(cell, n);
-        })
-      }
+      group.aggregators.forEach(aggregate => {
+        const interactingGroups = candidateCells.map(c => aggregate(c.position))
+        const interactingGroupSet = new Set(interactingGroups.map(g => g.index))
 
-      // find a fixed row
-      const rowSet = new Set(candidateCells.map(c => c.position.row))
-      if (rowSet.size === 1) {
-        this.getRowCells(Array.from(rowSet.values())[0]).forEach(cell => {
-          if (cell.boxIdx() === group.index) { return }
-          this.deletePossibleNumber(cell, n);
-        })
-      }
-    })
-  }
-
-  updateGroup(group: Group) {
-    group.updated = true
-    if (true) { return }
-    const cells = this.listCells(group)
-
-    Numbers.forEach(n => {
-      const candidateCells = cells.filter(c => c.possibleNumbers.has(n))
-      if (candidateCells.length === 1) {
-        this.fix(candidateCells[0].position, n)
-      }
-
-      const interactingGroupIndices = candidateCells.map(c => c.boxIdx())
-      const interactingGroupSet = new Set(interactingGroupIndices)
-
-      if (interactingGroupSet.size === 1) {
-        this.getBoxCells(interactingGroupIndices[0]).filter(c => !group.contains(c.position)).forEach(c => {
-          this.deletePossibleNumber(c, n)
-        })
-      }
+        if (interactingGroupSet.size === 1) {
+          this.listCells(interactingGroups[0])
+            .filter(c => !group.contains(c.position))
+            .forEach(cell => {
+              this.deletePossibleNumber(cell, n);
+            })
+        }
+      })
     })
   }
 
@@ -214,7 +223,7 @@ class Board {
     })
 
     this.boxes.forEach(box => {
-      this.updateBox(box)
+      this.updateGroup(box)
     })
 
     this.rows.forEach((row) => {
@@ -252,6 +261,23 @@ export const rank3Board = () => {
     [8, 0, 0, 5, 0, 0, 0, 1, 0],
     [9, 0, 0, 6, 0, 7, 0, 0, 0],
     [0, 0, 0, 0, 0, 0, 0, 0, 6],
+  ]
+  return new Board(init);
+}
+
+export const rank4Board = () => {
+  const init = [
+    [1, 0, 6, 0, 7, 0, 0, 0, 0],
+    [0, 0, 0, 9, 0, 0, 0, 0, 3],
+    [5, 0, 0, 0, 0, 0, 6, 4, 0],
+
+    [0, 0, 1, 5, 0, 0, 0, 3, 0],
+    [0, 0, 0, 4, 8, 0, 0, 0, 0],
+    [0, 7, 3, 0, 0, 0, 0, 5, 0],
+
+    [0, 0, 9, 0, 0, 0, 2, 0, 0],
+    [0, 0, 0, 0, 0, 8, 7, 0, 0],
+    [0, 0, 2, 0, 6, 0, 0, 1, 0],
   ]
   return new Board(init);
 }
