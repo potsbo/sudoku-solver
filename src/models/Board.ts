@@ -18,21 +18,7 @@ class Board {
     this.unupdatedBox = Array(9).fill(true)
   }
 
-  fix(position: CellPosition, n: number) {
-    const cell = this.getCellAt(position)
-    const updated = cell.fixTo(n)
-    if (updated) {
-      this.unupdatedBox[cell.boxIdx()] = true
-      this.listInteractingCellsTo(cell).forEach(c => {
-        c.markAsUnupdated()
-      })
-    }
-  }
-
-  private getCellAt(position: CellPosition): CellData {
-    return this.cells[position.row * 9 + position.column]
-  }
-
+  // getters
   deletePossibleNumber(cell: CellData, n: number) {
     const updateRequired = cell.deletePossibleNumber(n)
     if (updateRequired) {
@@ -55,6 +41,22 @@ class Board {
   listInteractingCellsTo(cell: CellData): CellData[] {
     // TODO: cache
     return this.cells.filter(c => cell.interacts(c))
+  }
+
+  // actions
+  fix(position: CellPosition, n: number) {
+    const cell = this.getCellAt(position)
+    const updated = cell.fixTo(n)
+    if (updated) {
+      this.unupdatedBox[cell.boxIdx()] = true
+      this.listInteractingCellsTo(cell).forEach(c => {
+        c.markAsUnupdated()
+      })
+    }
+  }
+
+  private getCellAt(position: CellPosition): CellData {
+    return this.cells[position.row * 9 + position.column]
   }
 
   updatePossibilities(cell: CellData) {
