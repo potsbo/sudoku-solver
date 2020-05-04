@@ -1,24 +1,25 @@
 import { CellData } from './CellData'
 
 class Board {
-  private cells: CellData[][]
+  private cells: CellData[] = []
   private unupdatedBox: boolean[]
 
   constructor(initial: number[][]) {
-    this.cells = getEmptyBoard()
-    this.cells.forEach(row => {
+    const boardCells = getEmptyBoard()
+    boardCells.forEach(row => {
       row.forEach(cell => {
         const n = initial[cell.position.row][cell.position.column]
         if (n > 0) {
           cell.fixTo(n, true)
         }
+        this.cells.push(cell)
       })
     })
     this.unupdatedBox = Array(9).fill(true)
   }
 
   fix(position: CellPosition, n: number) {
-    const cell = this.cells[position.row][position.column];
+    const cell = this.getCellAt(position)
     const updated = cell.fixTo(n)
     if (updated) {
       this.unupdatedBox[cell.boxIdx()] = true
@@ -28,6 +29,10 @@ class Board {
     }
   }
 
+  private getCellAt(position: CellPosition): CellData {
+    return this.cells[position.row * 9 + position.column]
+  }
+
   deletePossibleNumber(cell: CellData, n: number) {
     const updateRequired = cell.deletePossibleNumber(n)
     if (updateRequired) {
@@ -35,40 +40,21 @@ class Board {
     }
   }
 
-  // TODO: refactor
-  getFlatCells(): CellData[] {
-    const founds: CellData[] = []
-    this.cells.forEach(row => {
-      row.forEach(interactingCell => {
-        founds.push(interactingCell)
-      })
-    })
-    return founds;
-  }
-
   getBoxCells(boxIndex: number): CellData[] {
-    return this.getFlatCells().filter(c => c.boxIdx() === boxIndex);
+    return this.cells.filter(c => c.boxIdx() === boxIndex);
   }
 
   getBoxColumnCells(column: number): CellData[] {
-    return this.getFlatCells().filter(c => c.position.column === column)
+    return this.cells.filter(c => c.position.column === column)
   }
 
   getBoxRowCells(row: number): CellData[] {
-    return this.getFlatCells().filter(c => c.position.row === row)
+    return this.cells.filter(c => c.position.row === row)
   }
 
   listInteractingCellsTo(cell: CellData): CellData[] {
     // TODO: cache
-    const founds: CellData[] = []
-    this.cells.forEach(row => {
-      row.forEach(interactingCell => {
-        if (cell.interacts(interactingCell)) {
-          founds.push(interactingCell)
-        }
-      })
-    })
-    return founds;
+    return this.cells.filter(c => cell.interacts(c))
   }
 
   updatePossibilities(cell: CellData) {
@@ -78,18 +64,13 @@ class Board {
     if (fixedNum === null) {
       return
     }
-    this.cells.forEach(row => {
-      row.forEach(interactingCell => {
-        if (!cell.interacts(interactingCell)) {
-          return;
-        }
-        this.deletePossibleNumber(interactingCell, fixedNum);
-      })
+    this.listInteractingCellsTo(cell).forEach(c => {
+      this.deletePossibleNumber(c, fixedNum)
     })
   }
 
   unupdatedCells() {
-    return this.getFlatCells().filter(c => c.needUpdate)
+    return this.cells.filter(c => c.needUpdate)
   }
 
   updateBox(boxIndex: number) {
