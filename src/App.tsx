@@ -14,6 +14,7 @@ function App() {
   while (board.updatable()) {
     board.update()
   }
+  console.log("finished")
 
   const getBoxRow = (rowIdx: number) => {
     const getBox = (boxIdx: number) => {

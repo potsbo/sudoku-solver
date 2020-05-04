@@ -1,8 +1,36 @@
 import { CellData } from './CellData'
 
+class BoxData {
+  updated = false
+  index: number
+  constructor(index: number) {
+    this.index = index
+  }
+}
+
+class Row {
+  updated = false
+  index: number
+
+  constructor(index: number) {
+    this.index = index
+  }
+}
+
+class Column {
+  updated = false
+  index: number
+
+  constructor(index: number) {
+    this.index = index
+  }
+}
+
 class Board {
   private cells: CellData[] = []
-  private unupdatedBox: boolean[]
+  private boxes: BoxData[] = []
+  private rows: Row[] = []
+  private columns: Column[] = []
 
   constructor(initial: number[][]) {
     const boardCells = getEmptyBoard()
@@ -15,14 +43,18 @@ class Board {
         this.cells.push(cell)
       })
     })
-    this.unupdatedBox = Array(9).fill(true)
+    Array.from(Array(9).keys()).forEach((i) => {
+      this.boxes.push(new BoxData(i))
+      this.rows.push(new Row(i))
+      this.columns.push(new Column(i))
+    })
   }
 
   // getters
   deletePossibleNumber(cell: CellData, n: number) {
     const updateRequired = cell.deletePossibleNumber(n)
     if (updateRequired) {
-      this.unupdatedBox[cell.boxIdx()] = true
+      this.publishUpdate(cell)
     }
   }
 
@@ -30,11 +62,11 @@ class Board {
     return this.cells.filter(c => c.boxIdx() === boxIndex);
   }
 
-  getBoxColumnCells(column: number): CellData[] {
+  getColumnCells(column: number): CellData[] {
     return this.cells.filter(c => c.position.column === column)
   }
 
-  getBoxRowCells(row: number): CellData[] {
+  getRowCells(row: number): CellData[] {
     return this.cells.filter(c => c.position.row === row)
   }
 
@@ -48,10 +80,7 @@ class Board {
     const cell = this.getCellAt(position)
     const updated = cell.fixTo(n)
     if (updated) {
-      this.unupdatedBox[cell.boxIdx()] = true
-      this.listInteractingCellsTo(cell).forEach(c => {
-        c.markAsUnupdated()
-      })
+      this.publishUpdate(cell)
     }
   }
 
@@ -71,15 +100,23 @@ class Board {
     })
   }
 
+  private publishUpdate(cell: CellData) {
+    this.boxes[cell.boxIdx()].updated = false
+    this.rows[cell.position.row].updated = false
+    this.columns[cell.position.column].updated = false
+    this.listInteractingCellsTo(cell).forEach(c => {
+      this.cells[c.position.row * 9 + c.position.column].needUpdate = true
+    })
+  }
+
   unupdatedCells() {
     return this.cells.filter(c => c.needUpdate)
   }
 
   updateBox(boxIndex: number) {
-    this.unupdatedBox[boxIndex] = false
+    this.boxes[boxIndex].updated = true
     const cells = this.getBoxCells(boxIndex)
-    Array.from(Array(9).keys()).forEach(num => {
-      num++
+    Array.from(Array(9).keys()).map(n => n + 1).forEach(num => {
       const marks: CellData[] = []
 
       // fix a cell when there is only one possible cell for a number
@@ -95,7 +132,7 @@ class Board {
       // find a fixed column
       const colSet = new Set(marks.map(c => c.position.column))
       if (colSet.size === 1) {
-        this.getBoxColumnCells(Array.from(colSet.values())[0]).forEach(cell => {
+        this.getColumnCells(Array.from(colSet.values())[0]).forEach(cell => {
           if (cell.boxIdx() === boxIndex) { return }
           this.deletePossibleNumber(cell, num);
         })
@@ -104,7 +141,7 @@ class Board {
       // find a fixed row
       const rowSet = new Set(marks.map(c => c.position.row))
       if (rowSet.size === 1) {
-        this.getBoxRowCells(Array.from(rowSet.values())[0]).forEach(cell => {
+        this.getRowCells(Array.from(rowSet.values())[0]).forEach(cell => {
           if (cell.boxIdx() === boxIndex) { return }
           this.deletePossibleNumber(cell, num);
         })
@@ -112,8 +149,60 @@ class Board {
     })
   }
 
+  updateRow(index: number) {
+    this.rows[index].updated = true
+    const row = this.rows[index]
+    const cells = this.getRowCells(row.index)
+    Array.from(Array(9).keys()).map(n => n + 1).forEach(n => {
+      const boxIndices = cells
+        .filter(c => c.possibleNumbers.has(n))
+        .map(c => c.boxIdx())
+      const boxSet = new Set(boxIndices)
+
+      if (boxSet.size === 1) {
+        this.getBoxCells(boxIndices[0]).filter(c => c.position.row !== index).forEach(c => {
+          this.deletePossibleNumber(c, n)
+        })
+      }
+    })
+  }
+
+  updateColumn(index: number) {
+    this.columns[index].updated = true
+    const column = this.columns[index]
+    const cells = this.getColumnCells(column.index)
+    Array.from(Array(9).keys()).map(n => n + 1).forEach(n => {
+      const candidateCells = cells
+        .filter(c => c.possibleNumbers.has(n))
+      if (candidateCells.length === 1) {
+        this.fix(candidateCells[0].position, n)
+      }
+      const boxIndices = candidateCells.map(c => c.boxIdx())
+
+      const boxSet = new Set(boxIndices)
+
+      if (boxSet.size === 1) {
+        this.getBoxCells(boxIndices[0]).filter(c => c.position.column !== index).forEach(c => {
+          this.deletePossibleNumber(c, n)
+        })
+      }
+    })
+  }
+
   updatable(): boolean {
-    return this.unupdatedCells().length > 0 || this.unupdatedBox.filter(s => s).length > 0
+    if (this.unupdatedCells().length > 0) {
+      return true
+    }
+    if (this.boxes.filter(b => !b.updated).length > 0) {
+      return true
+    }
+    if (this.rows.filter(b => !b.updated).length > 0) {
+      return true
+    }
+    if (this.columns.filter(b => !b.updated).length > 0) {
+      return true
+    }
+    return false
   }
 
   update() {
@@ -121,8 +210,15 @@ class Board {
       this.updatePossibilities(cell)
     })
 
-    this.unupdatedBox.forEach((_, index) => {
+    this.boxes.forEach((_, index) => {
       this.updateBox(index)
+    })
+
+    this.rows.forEach((_, index) => {
+      this.updateRow(index)
+    })
+    this.columns.forEach((_, index) => {
+      this.updateColumn(index)
     })
   }
 }
