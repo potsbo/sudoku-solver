@@ -62,7 +62,7 @@ class Solver {
       return Status.Broken
     }
 
-    const cells = this.board.pickUnfixedCell().sort((a, b) => (a.possibleNumbers.size > b.possibleNumbers.size) ? 1 : -1)
+    const cells = this.board.listUnfixed().sort((a, b) => (a.possibleNumbers.size > b.possibleNumbers.size) ? 1 : -1)
     for (let i = 0; i < cells.length; i++) {
       let isDeadEnd = true
       const cell = cells[i]

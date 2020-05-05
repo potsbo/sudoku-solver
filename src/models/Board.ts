@@ -141,7 +141,7 @@ export class Board {
     return this.cells.filter(c => !c.valid()).length === 0
   }
 
-  pickUnfixedCell(): { position: CellPosition, possibleNumbers: Set<Digit> }[] {
+  listUnfixed(): { position: CellPosition, possibleNumbers: Set<Digit> }[] {
     const unfixed = this.cells.filter(c => c.fixedNum() === null)
     if (unfixed.length === 0) {
       return []
