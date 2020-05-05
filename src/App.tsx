@@ -2,22 +2,76 @@ import React from 'react';
 import './App.css';
 import styled from 'styled-components'
 import { Box } from './Box'
-import { rank5Board } from './models/Board'
+import { hardest, Board } from './models/Board'
 
 const BoxRow = styled.div`
   display: flex;
 `
 
-function App() {
-  const board = rank5Board()
+enum Status {
+  Completed = "completed",
+  Incompleted = "incompleted",
+  Broken = "broken",
+}
 
-  board.update()
-  if (board.completed()) {
-    console.log("ok")
-  } else {
-    console.log("not completed")
+class Solver {
+  public readonly board: Board
+  private enableBruteForce: boolean
+  private readonly maxDepth: number
+
+  constructor(board: Board, bruteForce: boolean, maxDepth?: number) {
+    this.maxDepth = maxDepth || 3
+    this.board = board
+    this.enableBruteForce = bruteForce
   }
-  console.log("finished")
+
+  solve(): Status {
+    if (!this.enableBruteForce) {
+      this.board.update()
+      return Status.Incompleted
+    }
+    var depth = 0
+
+    while (true) {
+      if (this.board.completed()) {
+        return Status.Completed
+      }
+      depth++
+      if (depth > this.maxDepth) { return Status.Incompleted }
+      console.log("not completed")
+
+      this.board.update()
+
+      const cells = this.board.pickUnfixedCell()
+      for (let i = 0; i < cells.length; i++) {
+        let isDeadEnd = true
+        const cell = cells[i]
+        const digs = Array.from(cell.possibleNumbers.values())
+
+        digs.forEach(dig => {
+          const init = this.board.dump()
+          init[cell.position.row][cell.position.column] = dig
+          const search = new Board(init)
+
+          if (!search.valid()) {
+            this.board.deletePossibleNumberFromPosition(cell.position, dig);
+          } else {
+            isDeadEnd = false
+          }
+        })
+        if (isDeadEnd) {
+          return Status.Broken
+        }
+      }
+    }
+  }
+}
+
+function App() {
+  const solver = new Solver(hardest(), true)
+  const result = solver.solve()
+  console.log("finished with", result)
+  const board = solver.board
 
   const getBoxRow = (rowIdx: number) => {
     const getBox = (boxIdx: number) => {

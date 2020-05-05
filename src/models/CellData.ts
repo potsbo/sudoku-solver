@@ -1,12 +1,13 @@
 import { CellPosition } from './CellPotision'
+import { Digit, allDigits } from './CellPotision'
 
 export class CellData {
   needUpdate: boolean
-  possibleNumbers: Set<number>
+  possibleNumbers: Set<Digit>
   position: CellPosition
   isInitial: boolean
 
-  constructor(n: number | undefined, position: CellPosition) {
+  constructor(n: Digit | undefined, position: CellPosition) {
     this.needUpdate = true;
     this.possibleNumbers = new Set()
     this.position = position
@@ -14,7 +15,7 @@ export class CellData {
     if (n !== undefined && n > 0) {
       this.possibleNumbers.add(n);
     } else {
-      [1, 2, 3, 4, 5, 6, 7, 8, 9].forEach((n) => {
+      allDigits().forEach((n) => {
         this.possibleNumbers.add(n);
       })
     }
@@ -34,12 +35,9 @@ export class CellData {
     }
   }
 
-  fixTo(n: number, isInitial?: boolean): boolean {
+  fixTo(n: Digit, isInitial?: boolean): boolean {
     if (this.possibleNumbers.size === 1) {
       return false
-    }
-    if (this.position.row === 5 && this.position.column === 7) {
-      console.log("update ", n)
     }
     this.possibleNumbers.clear()
     this.possibleNumbers.add(n)
@@ -49,7 +47,7 @@ export class CellData {
     return true
   }
 
-  fixedNum(): number | null {
+  fixedNum(): Digit | null {
     if (this.possibleNumbers.size !== 1) {
       return null
     }
@@ -57,7 +55,7 @@ export class CellData {
   }
 
   // it deletes the given number from possible list and returns this requires update
-  deletePossibleNumber(n: number): boolean {
+  deletePossibleNumber(n: Digit): boolean {
     if (!this.possibleNumbers.has(n)) {
       return false;
     }
@@ -84,5 +82,9 @@ export class CellData {
       return true
     }
     return this.boxIdx() === cell.boxIdx()
+  }
+
+  valid(): boolean {
+    return this.possibleNumbers.size > 0
   }
 }

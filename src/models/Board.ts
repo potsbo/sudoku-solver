@@ -1,5 +1,5 @@
 import { CellData } from './CellData'
-import { CellPosition, Index, allIndices, allDigits } from './CellPotision'
+import { CellPosition, Index, Digit, allIndices, allDigits } from './CellPotision'
 
 interface Container {
   contains: (position: CellPosition) => boolean
@@ -81,7 +81,7 @@ class Column {
   }
 }
 
-class Board {
+export class Board {
   private cells: CellData[] = []
   private boxes: StatefulGroup[] = []
   private rows: StatefulGroup[] = []
@@ -92,8 +92,8 @@ class Board {
     boardCells.forEach(row => {
       row.forEach(cell => {
         const n = initial[cell.position.row][cell.position.column]
-        if (n > 0) {
-          cell.fixTo(n, true)
+        if (n > 0 && n < 10) {
+          cell.fixTo(n as Digit, true)
         }
         this.cells.push(cell)
       })
@@ -111,7 +111,7 @@ class Board {
   }
 
   dump(): number[][] {
-    const ret = Array(9).fill(Array(9).fill(0))
+    const ret = allIndices().map(_ => allIndices().map(_ => 0))
     this.cells.forEach(cell => {
       const n = cell.fixedNum()
       if (n === null) { return }
@@ -120,8 +120,30 @@ class Board {
     return ret
   }
 
+  copy(): Board {
+    const init = this.dump()
+    return new Board(init)
+  }
+
   completed(): boolean {
     return this.cells.filter(c => c.fixedNum() === null).length === 0
+  }
+
+  valid(): boolean {
+    return this.cells.filter(c => !c.valid()).length === 0
+  }
+
+  pickUnfixedCell(): { position: CellPosition, possibleNumbers: Set<Digit> }[] {
+    const unfixed = this.cells.filter(c => c.fixedNum() === null)
+    if (unfixed.length === 0) {
+      return []
+    }
+    return unfixed.map(c => {
+      return {
+        position: c.position,
+        possibleNumbers: c.possibleNumbers,
+      }
+    })
   }
 
   private listInteractingCellsTo(cell: CellData): CellData[] {
@@ -133,13 +155,13 @@ class Board {
     return this.cells.filter(c => checker.contains(c.position))
   }
 
-  private getCellAt(position: CellPosition): CellData {
+  getCellAt(position: CellPosition): CellData {
     return this.cells[position.row * 9 + position.column]
   }
 
 
   // actions
-  private fix(position: CellPosition, n: number) {
+  fix(position: CellPosition, n: Digit) {
     const cell = this.getCellAt(position)
     const updated = cell.fixTo(n)
     if (updated) {
@@ -147,7 +169,15 @@ class Board {
     }
   }
 
-  private deletePossibleNumber(cell: CellData, n: number) {
+  private deletePossibleNumber(cell: CellData, n: Digit) {
+    const updateRequired = cell.deletePossibleNumber(n)
+    if (updateRequired) {
+      this.publishUpdate(cell)
+    }
+  }
+
+  deletePossibleNumberFromPosition(position: CellPosition, n: Digit) {
+    const cell = this.getCellAt(position)
     const updateRequired = cell.deletePossibleNumber(n)
     if (updateRequired) {
       this.publishUpdate(cell)
@@ -247,7 +277,7 @@ class Board {
 const getEmptyBoard = (): CellData[][] => {
   return allIndices().map(rowIdx => {
     return allIndices().map((columnIdx) => {
-      return new CellData(0, new CellPosition(rowIdx, columnIdx))
+      return new CellData(undefined, new CellPosition(rowIdx, columnIdx))
     })
   })
 }
@@ -317,6 +347,24 @@ export const difficult = () => {
     [0, 0, 9, 5, 0, 0, 0, 0, 1],
     [0, 5, 0, 0, 1, 0, 0, 3, 0],
     [2, 0, 0, 0, 0, 6, 7, 0, 0],
+  ]
+  return new Board(init);
+}
+
+export const hardest = () => {
+  // https://gizmodo.com/can-you-solve-the-10-hardest-logic-puzzles-ever-created-1064112665
+  const init = [
+    [8, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 3, 6, 0, 0, 0, 0, 0],
+    [0, 7, 0, 0, 9, 0, 2, 0, 0],
+
+    [0, 5, 0, 0, 0, 7, 0, 0, 0],
+    [0, 0, 0, 0, 4, 5, 7, 0, 0],
+    [0, 0, 0, 1, 0, 0, 0, 3, 0],
+
+    [0, 0, 1, 0, 0, 0, 0, 6, 8],
+    [0, 0, 8, 5, 0, 0, 0, 1, 0],
+    [0, 9, 0, 0, 0, 0, 4, 0, 0],
   ]
   return new Board(init);
 }
