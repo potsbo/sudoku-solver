@@ -41,15 +41,8 @@ class Solver {
       }
 
       const result = this.update()
-      if (result === Status.Broken) {
-        return result
-      }
-      if (result === Status.Stuck) {
-        return result
-      }
-      if (result === Status.Completed) {
-        return result
-      }
+      if (result === Status.Incompleted) { continue }
+      return result
     }
   }
 
@@ -63,13 +56,11 @@ class Solver {
     }
 
     const cells = this.board.listUnfixed().sort((a, b) => (a.possibleNumbers.size > b.possibleNumbers.size) ? 1 : -1)
-    for (let i = 0; i < cells.length; i++) {
+    for (const cell of cells) {
       let isDeadEnd = true
-      const cell = cells[i]
       const digs = Array.from(cell.possibleNumbers.values())
 
-      for (let j = 0; j < digs.length; j++) {
-        const dig = digs[j]
+      for (const dig of digs) {
         const search = this.board.copy()
         search.fix(cell.position, dig)
 

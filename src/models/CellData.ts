@@ -1,11 +1,11 @@
 import { CellPosition } from './CellPotision'
-import { Digit, allDigits, interacts } from './CellPotision'
+import { Digit, allDigits } from './CellPotision'
 
 export class CellData {
   needUpdate: boolean
   possibleNumbers: Set<Digit>
   public readonly position: CellPosition
-  isInitial: boolean
+  private isInitial: boolean
 
   constructor(n: Digit | undefined, position: CellPosition) {
     this.needUpdate = false;
