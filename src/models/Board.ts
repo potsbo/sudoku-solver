@@ -1,5 +1,5 @@
 import { CellData } from './CellData'
-import { CellPosition, Index, Digit, allIndices, allDigits, interacts, listInteractingPositions } from './CellPotision'
+import { CellPosition, Index, Digit, allIndices, allDigits, listInteractingPositions } from './CellPotision'
 
 interface Container {
   contains: (position: CellPosition) => boolean
@@ -20,7 +20,7 @@ interface StatefulGroup extends Group {
 type GroupCostructor = (position: CellPosition) => Group
 
 class BoxData {
-  updated = false
+  updated = true
   index: Index
 
   constructor(index: Index) {
@@ -42,7 +42,7 @@ class BoxData {
 }
 
 class Row {
-  updated = false
+  updated = true
   index: Index
   aggregators: GroupCostructor[] = [
     BoxData.Find
@@ -62,7 +62,7 @@ class Row {
 }
 
 class Column {
-  updated = false
+  updated = true
   index: Index
   aggregators: GroupCostructor[] = [
     BoxData.Find
@@ -116,7 +116,7 @@ export class Board {
     return this.cells.filter(c => c.position.boxIdx === boxIndex);
   }
 
-  dump(): number[][] {
+  private dump(): number[][] {
     const ret = allIndices().map(_ => allIndices().map(_ => 0))
     this.cells.forEach(cell => {
       const n = cell.fixedNum()
@@ -143,9 +143,6 @@ export class Board {
 
   listUnfixed(): { position: CellPosition, possibleNumbers: Set<Digit> }[] {
     const unfixed = this.cells.filter(c => c.fixedNum() === null)
-    if (unfixed.length === 0) {
-      return []
-    }
     return unfixed.map(c => {
       return {
         position: c.position,

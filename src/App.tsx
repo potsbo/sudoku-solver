@@ -55,11 +55,11 @@ class Solver {
 
   private update(): Status {
     this.board.update()
-    if (this.board.completed()) {
-      return Status.Completed
-    }
     if (!this.board.valid()) {
       return Status.Broken
+    }
+    if (this.board.completed()) {
+      return Status.Completed
     }
 
     const cells = this.board.listUnfixed().sort((a, b) => (a.possibleNumbers.size > b.possibleNumbers.size) ? 1 : -1)
