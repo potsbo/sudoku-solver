@@ -1,5 +1,5 @@
 import { CellData } from './CellData'
-import { CellPosition, Index, Digit, allIndices, allDigits, interacts } from './CellPotision'
+import { CellPosition, Index, Digit, allIndices, allDigits, interacts, listInteractingPositions } from './CellPotision'
 
 interface Container {
   contains: (position: CellPosition) => boolean
@@ -155,8 +155,7 @@ export class Board {
   }
 
   private listInteractingCellsTo(cell: CellData): CellData[] {
-    // TODO: cache
-    return this.cells.filter(c => interacts(cell.position, c.position))
+    return listInteractingPositions(cell.position).map(p => this.getCellAt(p))
   }
 
   private listCells(checker: Container): CellData[] {

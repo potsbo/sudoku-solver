@@ -48,3 +48,20 @@ const calcInteraction = (a: CellPosition, b: CellPosition): boolean => {
 export const interacts = (a: CellPosition, b: CellPosition): boolean => {
   return calcInteraction(a, b)
 }
+
+const allPositions: CellPosition[] = []
+allIndices().forEach(row => {
+  allIndices().forEach(column => {
+    allPositions.push(new CellPosition(row, column))
+  })
+})
+
+const interactionMap: CellPosition[][] = Array(allIndices().length * allIndices().length)
+
+export const listInteractingPositions = (a: CellPosition): CellPosition[] => {
+  const positions = interactionMap[a.row * 9 + a.column]
+  if (positions !== undefined) { return positions }
+  const calced = allPositions.filter(p => interacts(a, p))
+  interactionMap[a.row * 9 + a.column] = calced
+  return calced
+}
