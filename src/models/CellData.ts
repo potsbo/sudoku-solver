@@ -4,22 +4,18 @@ import { Digit, allDigits, sameBox, sameColumn, sameRow } from './CellPotision'
 export class CellData {
   needUpdate: boolean
   possibleNumbers: Set<Digit>
-  position: CellPosition
+  public readonly position: CellPosition
   isInitial: boolean
   private interactions: Interaction[]
 
   constructor(n: Digit | undefined, position: CellPosition) {
     this.interactions = [sameRow, sameColumn, sameBox]
     this.needUpdate = false;
-    this.possibleNumbers = new Set()
+    this.possibleNumbers = new Set(allDigits())
     this.position = position
     this.isInitial = false
     if (n !== undefined && n > 0) {
-      this.possibleNumbers.add(n);
-    } else {
-      allDigits().forEach((n) => {
-        this.possibleNumbers.add(n);
-      })
+      this.fixTo(n)
     }
   }
 
