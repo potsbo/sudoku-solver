@@ -3,6 +3,8 @@ import './App.css';
 import styled from 'styled-components'
 import { Box } from './Box'
 import { hardest, Board } from './models/Board'
+import { Index } from './models/CellPotision'
+import { CellData } from './models/CellData'
 
 const BoxRow = styled.div`
   display: flex;
@@ -14,8 +16,6 @@ enum Status {
   Broken = "broken",
   Stuck = "stuck",
 }
-
-var cnt = 0
 
 class Solver {
   public readonly board: Board
@@ -29,10 +29,6 @@ class Solver {
   }
 
   solve(): Status {
-    cnt++
-    if (cnt > 1000) {
-      return Status.Incompleted
-    }
     if (this.maxDepth < 1) {
       return Status.Incompleted
     }
@@ -101,7 +97,7 @@ class Solver {
 function App() {
   const solver = new Solver(hardest(), true)
   const result = solver.solve()
-  console.log("finished with", result, cnt)
+  console.log("finished with", result)
   const board = solver.board
 
   const getBoxRow = (rowIdx: number) => {
