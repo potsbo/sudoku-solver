@@ -2,13 +2,13 @@ import { CellPosition } from './CellPotision'
 import { Digit, allDigits } from './CellPotision'
 
 export class CellData {
-  needUpdate: boolean
+  updated: boolean
   possibleNumbers: Set<Digit>
   public readonly position: CellPosition
   private isInitial: boolean
 
   constructor(n: Digit | undefined, position: CellPosition) {
-    this.needUpdate = false;
+    this.updated = true;
     this.possibleNumbers = new Set(allDigits())
     this.position = position
     this.isInitial = false
@@ -50,7 +50,7 @@ export class CellData {
       return false;
     }
 
-    this.needUpdate = true;
+    this.updated = false;
     this.possibleNumbers.delete(n)
     return true;
   }

@@ -188,8 +188,8 @@ export class Board {
   }
 
   private updatePossibilities(cell: CellData) {
-    if (!cell.needUpdate) { return }
-    cell.needUpdate = false
+    if (cell.updated) { return }
+    cell.updated = true
     const fixedNum = cell.fixedNum()
     if (fixedNum === null) {
       return
@@ -204,12 +204,12 @@ export class Board {
     this.rows[cell.position.row].updated = false
     this.columns[cell.position.column].updated = false
     this.listInteractingCellsTo(cell).forEach(c => {
-      c.needUpdate = true
+      c.updated = false
     })
   }
 
   private unupdatedCells() {
-    return this.cells.filter(c => c.needUpdate)
+    return this.cells.filter(c => !c.updated)
   }
 
   updateGroup(group: StatefulGroup) {

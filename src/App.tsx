@@ -70,9 +70,9 @@ class Solver {
         if (result === Status.Broken) {
           this.board.deletePossibleNumberFromPosition(cell.position, dig);
           return Status.Incompleted
-        } else {
-          isDeadEnd = false
         }
+
+        isDeadEnd = false
       }
       if (isDeadEnd) {
         return Status.Broken
