@@ -36,7 +36,6 @@ export const sameRow = (a: CellPosition, b: CellPosition): boolean => {
 
 const calcInteraction = (a: CellPosition, b: CellPosition): boolean => {
   if (a.row === b.row && a.column === b.column) { return false }
-  if (a.row === b.row && a.column === b.column) { return false }
   const interactions = [sameRow, sameColumn, sameBox]
   for (let i = 0; i < interactions.length; i++) {
     if (interactions[i](a, b)) {
