@@ -1,3 +1,5 @@
+import { CellPosition } from './CellPotision'
+
 export class CellData {
   needUpdate: boolean
   possibleNumbers: Set<number>

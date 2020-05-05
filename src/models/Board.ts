@@ -1,4 +1,5 @@
 import { CellData } from './CellData'
+import { CellPosition, Index, allIndices, allDigits } from './CellPotision'
 
 interface Container {
   contains: (position: CellPosition) => boolean
@@ -9,7 +10,7 @@ interface Aggregator {
 }
 
 interface Group extends Container, Aggregator {
-  readonly index: number
+  readonly index: Index
 }
 
 interface StatefulGroup extends Group {
@@ -20,14 +21,14 @@ type GroupCostructor = (position: CellPosition) => Group
 
 class BoxData {
   updated = false
-  index: number
+  index: Index
 
-  constructor(index: number) {
+  constructor(index: Index) {
     this.index = index
   }
 
   contains(position: CellPosition): boolean {
-    return positionToBoxIdx(position) === this.index;
+    return position.boxIdx() === this.index;
   }
 
   aggregators: GroupCostructor[] = [
@@ -36,18 +37,18 @@ class BoxData {
   ]
 
   static Find(position: CellPosition): Group {
-    return new BoxData(positionToBoxIdx(position))
+    return new BoxData(position.boxIdx())
   }
 }
 
 class Row {
   updated = false
-  index: number
+  index: Index
   aggregators: GroupCostructor[] = [
     BoxData.Find
   ]
 
-  constructor(index: number) {
+  constructor(index: Index) {
     this.index = index
   }
 
@@ -62,12 +63,12 @@ class Row {
 
 class Column {
   updated = false
-  index: number
+  index: Index
   aggregators: GroupCostructor[] = [
     BoxData.Find
   ]
 
-  constructor(index: number) {
+  constructor(index: Index) {
     this.index = index
   }
 
@@ -80,18 +81,11 @@ class Column {
   }
 }
 
-const positionToBoxIdx = (position: CellPosition): number => {
-  const yBoxIdx = Math.floor(position.row / 3)
-  const xBoxIdx = Math.floor(position.column / 3)
-  return (yBoxIdx * 3 + xBoxIdx)
-}
-const Numbers = Array.from(Array(9).keys()).map(n => n + 1)
-
 class Board {
   private cells: CellData[] = []
-  private boxes: BoxData[] = []
-  private rows: Row[] = []
-  private columns: Column[] = []
+  private boxes: StatefulGroup[] = []
+  private rows: StatefulGroup[] = []
+  private columns: StatefulGroup[] = []
 
   constructor(initial: number[][]) {
     const boardCells = getEmptyBoard()
@@ -104,7 +98,7 @@ class Board {
         this.cells.push(cell)
       })
     })
-    Array.from(Array(9).keys()).forEach((i) => {
+    allIndices().forEach((i) => {
       this.boxes.push(new BoxData(i))
       this.rows.push(new Row(i))
       this.columns.push(new Column(i))
@@ -114,6 +108,20 @@ class Board {
   // getters
   getBoxCells(boxIndex: number): CellData[] {
     return this.cells.filter(c => c.boxIdx() === boxIndex);
+  }
+
+  dump(): number[][] {
+    const ret = Array(9).fill(Array(9).fill(0))
+    this.cells.forEach(cell => {
+      const n = cell.fixedNum()
+      if (n === null) { return }
+      ret[cell.position.row][cell.position.column] = n
+    })
+    return ret
+  }
+
+  completed(): boolean {
+    return this.cells.filter(c => c.fixedNum() === null).length === 0
   }
 
   private listInteractingCellsTo(cell: CellData): CellData[] {
@@ -131,7 +139,7 @@ class Board {
 
 
   // actions
-  fix(position: CellPosition, n: number) {
+  private fix(position: CellPosition, n: number) {
     const cell = this.getCellAt(position)
     const updated = cell.fixTo(n)
     if (updated) {
@@ -139,14 +147,14 @@ class Board {
     }
   }
 
-  deletePossibleNumber(cell: CellData, n: number) {
+  private deletePossibleNumber(cell: CellData, n: number) {
     const updateRequired = cell.deletePossibleNumber(n)
     if (updateRequired) {
       this.publishUpdate(cell)
     }
   }
 
-  updatePossibilities(cell: CellData) {
+  private updatePossibilities(cell: CellData) {
     if (!cell.needUpdate) { return }
     cell.markAsUpdated()
     const fixedNum = cell.fixedNum()
@@ -163,11 +171,11 @@ class Board {
     this.rows[cell.position.row].updated = false
     this.columns[cell.position.column].updated = false
     this.listInteractingCellsTo(cell).forEach(c => {
-      this.cells[c.position.row * 9 + c.position.column].needUpdate = true
+      c.needUpdate = true
     })
   }
 
-  unupdatedCells() {
+  private unupdatedCells() {
     return this.cells.filter(c => c.needUpdate)
   }
 
@@ -175,7 +183,7 @@ class Board {
     group.updated = true
     const cells = this.listCells(group)
 
-    Numbers.forEach(n => {
+    allDigits().forEach(n => {
       // fix a cell when there is only one possible cell for a number
       const candidateCells = cells.filter(c => c.possibleNumbers.has(n))
       if (candidateCells.length === 1) {
@@ -202,6 +210,7 @@ class Board {
     if (this.unupdatedCells().length > 0) {
       return true
     }
+
     if (this.boxes.filter(b => !b.updated).length > 0) {
       return true
     }
@@ -215,34 +224,32 @@ class Board {
   }
 
   update() {
-    this.unupdatedCells().forEach(cell => {
-      this.updatePossibilities(cell)
-    })
+    while (this.updatable()) {
+      this.unupdatedCells().forEach(cell => {
+        this.updatePossibilities(cell)
+      })
 
-    this.boxes.forEach(box => {
-      this.updateGroup(box)
-    })
+      this.boxes.forEach(box => {
+        this.updateGroup(box)
+      })
 
-    this.rows.forEach((row) => {
-      this.updateGroup(row)
-    })
-    this.columns.forEach((column) => {
-      this.updateGroup(column)
-    })
+      this.rows.forEach((row) => {
+        this.updateGroup(row)
+      })
+      this.columns.forEach((column) => {
+        this.updateGroup(column)
+      })
+    }
   }
 }
 
 
 const getEmptyBoard = (): CellData[][] => {
-  const data: CellData[][] = []
-  for (let rowIdx = 0; rowIdx < 9; rowIdx++) {
-    const row: CellData[] = []
-    for (let columnIdx = 0; columnIdx < 9; columnIdx++) {
-      row.push(new CellData(0, { row: rowIdx, column: columnIdx }))
-    }
-    data.push(row)
-  }
-  return data
+  return allIndices().map(rowIdx => {
+    return allIndices().map((columnIdx) => {
+      return new CellData(0, new CellPosition(rowIdx, columnIdx))
+    })
+  })
 }
 
 export const rank3Board = () => {

@@ -11,8 +11,11 @@ const BoxRow = styled.div`
 function App() {
   const board = rank5Board()
 
-  while (board.updatable()) {
-    board.update()
+  board.update()
+  if (board.completed()) {
+    console.log("ok")
+  } else {
+    console.log("not completed")
   }
   console.log("finished")
 
