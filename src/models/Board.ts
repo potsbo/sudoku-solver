@@ -116,6 +116,14 @@ export class Board {
     return this.cells.filter(c => c.position.boxIdx === boxIndex);
   }
 
+  boxCells(): Map<Index, CellData[]> {
+    const map = new Map<Index, CellData[]>()
+    allIndices().forEach(i => {
+      map.set(i, this.getBoxCells(i))
+    })
+    return map
+  }
+
   private dump(): number[][] {
     const ret = allIndices().map(_ => allIndices().map(_ => 0))
     this.cells.forEach(cell => {
