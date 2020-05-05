@@ -108,29 +108,23 @@ class Board {
   }
 
   // getters
-  deletePossibleNumber(cell: CellData, n: number) {
-    const updateRequired = cell.deletePossibleNumber(n)
-    if (updateRequired) {
-      this.publishUpdate(cell)
-    }
-  }
-
   getBoxCells(boxIndex: number): CellData[] {
     return this.cells.filter(c => c.boxIdx() === boxIndex);
   }
 
-  getColumnCells(column: number): CellData[] {
-    return this.cells.filter(c => c.position.column === column)
-  }
-
-  getRowCells(row: number): CellData[] {
-    return this.cells.filter(c => c.position.row === row)
-  }
-
-  listInteractingCellsTo(cell: CellData): CellData[] {
+  private listInteractingCellsTo(cell: CellData): CellData[] {
     // TODO: cache
     return this.cells.filter(c => cell.interacts(c))
   }
+
+  private listCells(checker: Container): CellData[] {
+    return this.cells.filter(c => checker.contains(c.position))
+  }
+
+  private getCellAt(position: CellPosition): CellData {
+    return this.cells[position.row * 9 + position.column]
+  }
+
 
   // actions
   fix(position: CellPosition, n: number) {
@@ -141,12 +135,11 @@ class Board {
     }
   }
 
-  private listCells(checker: Container): CellData[] {
-    return this.cells.filter(c => checker.contains(c.position))
-  }
-
-  private getCellAt(position: CellPosition): CellData {
-    return this.cells[position.row * 9 + position.column]
+  deletePossibleNumber(cell: CellData, n: number) {
+    const updateRequired = cell.deletePossibleNumber(n)
+    if (updateRequired) {
+      this.publishUpdate(cell)
+    }
   }
 
   updatePossibilities(cell: CellData) {
