@@ -10,7 +10,7 @@ export class CellData {
 
   constructor(n: Digit | undefined, position: CellPosition) {
     this.interactions = [sameRow, sameColumn, sameBox]
-    this.needUpdate = true;
+    this.needUpdate = false;
     this.possibleNumbers = new Set()
     this.position = position
     this.isInitial = false

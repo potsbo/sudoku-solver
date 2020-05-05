@@ -1,5 +1,5 @@
 import { CellData } from './CellData'
-import { CellPosition, Index, Digit, allIndices, allDigits, Interaction } from './CellPotision'
+import { CellPosition, Index, Digit, allIndices, allDigits } from './CellPotision'
 
 interface Container {
   contains: (position: CellPosition) => boolean
@@ -28,7 +28,7 @@ class BoxData {
   }
 
   contains(position: CellPosition): boolean {
-    return position.boxIdx() === this.index;
+    return position.boxIdx === this.index;
   }
 
   aggregators: GroupCostructor[] = [
@@ -37,7 +37,7 @@ class BoxData {
   ]
 
   static Find(position: CellPosition): Group {
-    return new BoxData(position.boxIdx())
+    return new BoxData(position.boxIdx)
   }
 }
 
@@ -113,7 +113,7 @@ export class Board {
 
   // getters
   getBoxCells(boxIndex: number): CellData[] {
-    return this.cells.filter(c => c.position.boxIdx() === boxIndex);
+    return this.cells.filter(c => c.position.boxIdx === boxIndex);
   }
 
   dump(): number[][] {
@@ -205,7 +205,7 @@ export class Board {
   }
 
   private publishUpdate(cell: CellData) {
-    this.boxes[cell.position.boxIdx()].updated = false
+    this.boxes[cell.position.boxIdx].updated = false
     this.rows[cell.position.row].updated = false
     this.columns[cell.position.column].updated = false
     this.listInteractingCellsTo(cell).forEach(c => {
