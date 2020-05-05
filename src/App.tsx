@@ -12,7 +12,10 @@ enum Status {
   Completed = "completed",
   Incompleted = "incompleted",
   Broken = "broken",
+  Stuck = "stuck",
 }
+
+var cnt = 0
 
 class Solver {
   public readonly board: Board
@@ -20,57 +23,85 @@ class Solver {
   private readonly maxDepth: number
 
   constructor(board: Board, bruteForce: boolean, maxDepth?: number) {
-    this.maxDepth = maxDepth || 3
+    this.maxDepth = maxDepth || 5
     this.board = board
     this.enableBruteForce = bruteForce
   }
 
   solve(): Status {
+    cnt++
+    if (cnt > 1000) {
+      return Status.Incompleted
+    }
+    if (this.maxDepth < 1) {
+      return Status.Incompleted
+    }
     if (!this.enableBruteForce) {
       this.board.update()
       return Status.Incompleted
     }
-    var depth = 0
 
     while (true) {
       if (this.board.completed()) {
         return Status.Completed
       }
-      depth++
-      if (depth > this.maxDepth) { return Status.Incompleted }
-      console.log("not completed")
 
-      this.board.update()
-
-      const cells = this.board.pickUnfixedCell()
-      for (let i = 0; i < cells.length; i++) {
-        let isDeadEnd = true
-        const cell = cells[i]
-        const digs = Array.from(cell.possibleNumbers.values())
-
-        digs.forEach(dig => {
-          const init = this.board.dump()
-          init[cell.position.row][cell.position.column] = dig
-          const search = new Board(init)
-
-          if (!search.valid()) {
-            this.board.deletePossibleNumberFromPosition(cell.position, dig);
-          } else {
-            isDeadEnd = false
-          }
-        })
-        if (isDeadEnd) {
-          return Status.Broken
-        }
+      const result = this.update()
+      if (result === Status.Broken) {
+        return result
+      }
+      if (result === Status.Stuck) {
+        return result
+      }
+      if (result === Status.Completed) {
+        return result
       }
     }
+  }
+
+  private update(): Status {
+    this.board.update()
+    if (this.board.completed()) {
+      return Status.Completed
+    }
+    if (!this.board.valid()) {
+      return Status.Broken
+    }
+
+    const cells = this.board.pickUnfixedCell().sort((a, b) => (a.possibleNumbers.size > b.possibleNumbers.size) ? 1 : -1)
+    for (let i = 0; i < cells.length; i++) {
+      let isDeadEnd = true
+      const cell = cells[i]
+      const digs = Array.from(cell.possibleNumbers.values())
+
+      for (let j = 0; j < digs.length; j++) {
+        const dig = digs[j]
+        const search = this.board.copy()
+        search.fix(cell.position, dig)
+
+        const solver = new Solver(search, this.enableBruteForce, this.maxDepth - 1)
+        const result = solver.solve()
+
+        if (result === Status.Broken) {
+          this.board.deletePossibleNumberFromPosition(cell.position, dig);
+          return Status.Incompleted
+        } else {
+          isDeadEnd = false
+        }
+      }
+      if (isDeadEnd) {
+        return Status.Broken
+      }
+    }
+
+    return Status.Stuck
   }
 }
 
 function App() {
   const solver = new Solver(hardest(), true)
   const result = solver.solve()
-  console.log("finished with", result)
+  console.log("finished with", result, cnt)
   const board = solver.board
 
   const getBoxRow = (rowIdx: number) => {

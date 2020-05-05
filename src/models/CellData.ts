@@ -21,12 +21,6 @@ export class CellData {
     }
   }
 
-  boxIdx(): number {
-    const yBoxIdx = Math.floor(this.position.row / 3)
-    const xBoxIdx = Math.floor(this.position.column / 3)
-    return yBoxIdx * 3 + xBoxIdx;
-  }
-
   state(): CellState {
     return {
       possibleNumbers: this.possibleNumbers,
@@ -81,7 +75,7 @@ export class CellData {
     if (this.position.column === cell.position.column) {
       return true
     }
-    return this.boxIdx() === cell.boxIdx()
+    return this.position.boxIdx() === cell.position.boxIdx()
   }
 
   valid(): boolean {

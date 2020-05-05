@@ -105,9 +105,15 @@ export class Board {
     })
   }
 
+  load(cells: CellData[]) {
+    cells.forEach(c => {
+      this.getCellAt(c.position).possibleNumbers = new Set(c.possibleNumbers)
+    })
+  }
+
   // getters
   getBoxCells(boxIndex: number): CellData[] {
-    return this.cells.filter(c => c.boxIdx() === boxIndex);
+    return this.cells.filter(c => c.position.boxIdx() === boxIndex);
   }
 
   dump(): number[][] {
@@ -122,7 +128,9 @@ export class Board {
 
   copy(): Board {
     const init = this.dump()
-    return new Board(init)
+    const copied = new Board(init)
+    copied.load(this.cells)
+    return copied
   }
 
   completed(): boolean {
@@ -197,7 +205,7 @@ export class Board {
   }
 
   private publishUpdate(cell: CellData) {
-    this.boxes[cell.boxIdx()].updated = false
+    this.boxes[cell.position.boxIdx()].updated = false
     this.rows[cell.position.row].updated = false
     this.columns[cell.position.column].updated = false
     this.listInteractingCellsTo(cell).forEach(c => {
