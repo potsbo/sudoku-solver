@@ -5,12 +5,11 @@ interface Container {
 }
 
 interface Aggregator {
-  aggregators: GroupCostructor[]
+  readonly aggregators: GroupCostructor[]
 }
 
 interface Group extends Container, Aggregator {
-  // interaction: () => [[Group]]
-  index: number
+  readonly index: number
 }
 
 interface StatefulGroup extends Group {
@@ -33,6 +32,7 @@ class BoxData {
 
   aggregators: GroupCostructor[] = [
     Column.Find,
+    Row.Find,
   ]
 
   static Find(position: CellPosition): Group {
@@ -53,6 +53,10 @@ class Row {
 
   contains(position: CellPosition): boolean {
     return position.row === this.index
+  }
+
+  static Find(position: CellPosition): Group {
+    return new Row(position.row)
   }
 }
 
