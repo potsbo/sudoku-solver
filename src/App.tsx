@@ -3,8 +3,6 @@ import './App.css';
 import styled from 'styled-components'
 import { Box } from './Box'
 import { hardest, Board } from './models/Board'
-import { Index } from './models/CellPotision'
-import { CellData } from './models/CellData'
 
 const BoxRow = styled.div`
   display: flex;
