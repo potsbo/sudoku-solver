@@ -167,7 +167,6 @@ export class Board {
     return this.cells[position.row * 9 + position.column]
   }
 
-
   // actions
   fix(position: CellPosition, n: Digit) {
     const cell = this.getCellAt(position)
@@ -218,6 +217,9 @@ export class Board {
   }
 
   updateGroup(group: StatefulGroup) {
+    if (group.updated) {
+      return
+    }
     group.updated = true
     const cells = this.listCells(group)
 
@@ -270,7 +272,6 @@ export class Board {
       this.boxes.forEach(box => {
         this.updateGroup(box)
       })
-
       this.rows.forEach((row) => {
         this.updateGroup(row)
       })

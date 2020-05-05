@@ -94,7 +94,12 @@ class Solver {
 
 function App() {
   const solver = new Solver(hardest(), true)
+  var start = new Date().getTime();
+
   const result = solver.solve()
+  const end = new Date().getTime();
+  const time = end - start;
+  console.log('Execution time: ' + time);
   console.log("finished with", result)
   const board = solver.board
 
