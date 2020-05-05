@@ -194,7 +194,7 @@ export class Board {
 
   private updatePossibilities(cell: CellData) {
     if (!cell.needUpdate) { return }
-    cell.markAsUpdated()
+    cell.needUpdate = false
     const fixedNum = cell.fixedNum()
     if (fixedNum === null) {
       return

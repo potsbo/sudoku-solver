@@ -21,7 +21,7 @@ export class CellData {
     }
   }
 
-  state(): CellState {
+  public state(): CellState {
     return {
       possibleNumbers: this.possibleNumbers,
       determined: this.fixedNum(),
@@ -29,7 +29,7 @@ export class CellData {
     }
   }
 
-  fixTo(n: Digit, isInitial?: boolean): boolean {
+  public fixTo(n: Digit, isInitial?: boolean): boolean {
     if (this.possibleNumbers.size === 1) {
       return false
     }
@@ -41,7 +41,7 @@ export class CellData {
     return true
   }
 
-  fixedNum(): Digit | null {
+  public fixedNum(): Digit | null {
     if (this.possibleNumbers.size !== 1) {
       return null
     }
@@ -57,14 +57,6 @@ export class CellData {
     this.needUpdate = true;
     this.possibleNumbers.delete(n)
     return true;
-  }
-
-  markAsUpdated() {
-    this.needUpdate = false
-  }
-
-  markAsUnupdated() {
-    this.needUpdate = true
   }
 
   interacts(cell: CellData): boolean {
