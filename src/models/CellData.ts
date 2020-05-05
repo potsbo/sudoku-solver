@@ -1,13 +1,15 @@
-import { CellPosition } from './CellPotision'
-import { Digit, allDigits } from './CellPotision'
+import { CellPosition, Interaction } from './CellPotision'
+import { Digit, allDigits, sameBox, sameColumn, sameRow } from './CellPotision'
 
 export class CellData {
   needUpdate: boolean
   possibleNumbers: Set<Digit>
   position: CellPosition
   isInitial: boolean
+  private interactions: Interaction[]
 
   constructor(n: Digit | undefined, position: CellPosition) {
+    this.interactions = [sameRow, sameColumn, sameBox]
     this.needUpdate = true;
     this.possibleNumbers = new Set()
     this.position = position
@@ -61,13 +63,9 @@ export class CellData {
 
   interacts(cell: CellData): boolean {
     if (this.position.row === cell.position.row && this.position.column === cell.position.column) { return false }
-    if (this.position.row === cell.position.row) {
-      return true
-    }
-    if (this.position.column === cell.position.column) {
-      return true
-    }
-    return this.position.boxIdx() === cell.position.boxIdx()
+    return this.interactions
+      .map(f => f(this.position, cell.position))
+      .reduce((a, b) => a || b)
   }
 
   valid(): boolean {

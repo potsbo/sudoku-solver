@@ -24,3 +24,14 @@ export const allIndices = (): Index[] => {
 export const allDigits = (): Digit[] => {
   return [1, 2, 3, 4, 5, 6, 7, 8, 9]
 }
+
+export type Interaction = (a: CellPosition, b: CellPosition) => boolean
+export const sameBox = (a: CellPosition, b: CellPosition): boolean => {
+  return a.boxIdx() === b.boxIdx()
+}
+export const sameColumn = (a: CellPosition, b: CellPosition): boolean => {
+  return a.column === b.column
+}
+export const sameRow = (a: CellPosition, b: CellPosition): boolean => {
+  return a.row === b.row
+}

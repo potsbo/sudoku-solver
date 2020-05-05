@@ -1,5 +1,5 @@
 import { CellData } from './CellData'
-import { CellPosition, Index, Digit, allIndices, allDigits } from './CellPotision'
+import { CellPosition, Index, Digit, allIndices, allDigits, Interaction } from './CellPotision'
 
 interface Container {
   contains: (position: CellPosition) => boolean
