@@ -18,17 +18,17 @@ interface BoxProps {
 export const Box = (props: BoxProps) => {
   return (
     <BoxDiv>
-      <CellRow>
+      <CellRow key={1}>
         <Cell status={props.cells[0]} />
         <Cell status={props.cells[1]} />
         <Cell status={props.cells[2]} />
       </CellRow>
-      <CellRow>
+      <CellRow key={2}>
         <Cell status={props.cells[3]} />
         <Cell status={props.cells[4]} />
         <Cell status={props.cells[5]} />
       </CellRow>
-      <CellRow>
+      <CellRow key={3}>
         <Cell status={props.cells[6]} />
         <Cell status={props.cells[7]} />
         <Cell status={props.cells[8]} />

@@ -20,13 +20,15 @@ var cnt = 0
 const sleep = (msec: number) => new Promise(resolve => setTimeout(resolve, msec));
 export class Solver {
   public readonly board: Board
-  private enableBruteForce: boolean
-  private readonly maxDepth: number
+  private readonly enableBruteForce: boolean
+  private readonly allowedDepth: number
   private readonly delay: number
+  private readonly maxSearch: number
 
   constructor(board: Board, bruteForce: boolean, maxDepth?: number, delay?: number) {
-    this.maxDepth = maxDepth || 5
+    this.allowedDepth = maxDepth || 5
     this.delay = delay || 0
+    this.maxSearch = 10000
     this.board = board
     this.enableBruteForce = bruteForce
   }
@@ -34,10 +36,10 @@ export class Solver {
   async solve(callback?: (map: Map<Index, CellData[]>) => void): Promise<Result> {
     await sleep(this.delay)
     cnt++
-    if (cnt > 10000) {
+    if (cnt > this.maxSearch) {
       return { status: Status.Incompleted }
     }
-    if (this.maxDepth < 1) {
+    if (this.allowedDepth < 1) {
       return { status: Status.Incompleted }
     }
     if (!this.enableBruteForce) {
@@ -73,23 +75,22 @@ export class Solver {
 
     const cells = this.board.listUnfixed().sort((a, b) => (a.possibleNumbers.size > b.possibleNumbers.size) ? 1 : -1)
     for (const cell of cells) {
-      let isDeadEnd = true
+      let isDeadEnd = true  // TODO: check this is useful or not
       const digs = Array.from(cell.possibleNumbers.values())
 
       for (const dig of digs) {
-        const search = this.board.copy()
-        search.fix(cell.position, dig, false)
-
-        const solver = new Solver(search, this.enableBruteForce, this.maxDepth - 1)
+        // try fixing a cell to check if it works
+        const tmpBoard = this.board.copy()
+        tmpBoard.fix(cell.position, dig, false)
+        const solver = new Solver(tmpBoard, this.enableBruteForce, this.allowedDepth - 1)
         const result = await solver.solve(callback)
 
-        if (result.status === Status.Completed) {
-          return result
-        }
-
-        if (result.status === Status.Broken) {
-          this.board.deletePossibleNumberFromPosition(cell.position, dig);
-          return { status: Status.Incompleted }
+        switch (result.status) {
+          case Status.Completed:
+            return result
+          case Status.Broken:
+            this.board.deletePossibleNumberFromPosition(cell.position, dig);
+            return { status: Status.Incompleted }
         }
 
         isDeadEnd = false

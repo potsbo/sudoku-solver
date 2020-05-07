@@ -36,11 +36,11 @@ function App() {
   const getBoxRow = (rowIdx: number) => {
     const getBox = (boxIdx: number) => {
       const cells = boxCells.get(boxIdx as Index) || [];
-      return <Box cells={cells.map(s => s.state())} />
+      return <Box key={boxIdx} cells={cells.map(s => s.state())} />
     }
     const offset = (rowIdx * 3) as Index
     return (
-      <BoxRow>
+      <BoxRow key={rowIdx}>
         {getBox(offset + 0)}
         {getBox(offset + 1)}
         {getBox(offset + 2)}
