@@ -233,7 +233,7 @@ export class Board {
     const cells = this.listCells(group)
 
     allDigits().forEach(n => {
-      // fix a cell when there is only one possible cell for a number
+      // fix a cell when there is only one possible cell in a group
       const candidateCells = cells.filter(c => c.possibleNumbers.has(n))
       if (candidateCells.length === 1) {
         this.fix(candidateCells[0].position, n);

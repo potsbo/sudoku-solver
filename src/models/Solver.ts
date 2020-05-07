@@ -51,9 +51,6 @@ export class Solver {
       if (callback !== undefined) {
         callback(this.board.boxCells())
       }
-      if (this.board.completed()) {
-        return { status: Status.Completed, boxCells: this.board.boxCells() }
-      }
 
       const result = await this.update(callback)
       if (result.status === Status.Incompleted) { continue }
