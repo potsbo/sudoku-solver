@@ -60,9 +60,6 @@ export class Solver {
 
   private async update(callback?: (map: Map<Index, CellData[]>) => void): Promise<Result> {
     this.board.update()
-    if (callback !== undefined) {
-      callback(this.board.boxCells())
-    }
     if (this.board.completed()) {
       return { status: Status.Completed, boxCells: this.board.boxCells() }
     }
