@@ -109,10 +109,13 @@ export class Board {
     })
   }
 
-  load(cells: CellData[]) {
-    cells.forEach(c => {
-      this.getCellAt(c.position).possibleNumbers = new Set(c.possibleNumbers)
-    })
+  // attributes
+  completed(): boolean {
+    return this.cells.filter(c => c.fixedNum() === null).length === 0
+  }
+
+  valid(): boolean {
+    return this.cells.filter(c => !c.valid()).length === 0
   }
 
   // getters
@@ -126,31 +129,6 @@ export class Board {
       map.set(i, this.getBoxCells(i))
     })
     return map
-  }
-
-  private dump(): number[][] {
-    const ret = allIndices().map(_ => allIndices().map(_ => 0))
-    this.cells.forEach(cell => {
-      const n = cell.fixedNum()
-      if (!cell.isInitial || n === null) { return }
-      ret[cell.position.row][cell.position.column] = n
-    })
-    return ret
-  }
-
-  copy(): Board {
-    const init = this.dump()
-    const copied = new Board(init)
-    copied.load(this.cells)
-    return copied
-  }
-
-  completed(): boolean {
-    return this.cells.filter(c => c.fixedNum() === null).length === 0
-  }
-
-  valid(): boolean {
-    return this.cells.filter(c => !c.valid()).length === 0
   }
 
   listUnfixed(): { position: CellPosition, possibleNumbers: Set<Digit> }[] {
@@ -224,7 +202,30 @@ export class Board {
     return this.cells.filter(c => !c.updated)
   }
 
-  updateGroup(group: StatefulGroup) {
+  private dump(): number[][] {
+    const ret = allIndices().map(_ => allIndices().map(_ => 0))
+    this.cells.forEach(cell => {
+      const n = cell.fixedNum()
+      if (!cell.isInitial || n === null) { return }
+      ret[cell.position.row][cell.position.column] = n
+    })
+    return ret
+  }
+
+  copy(): Board {
+    const init = this.dump()
+    const copied = new Board(init)
+    copied.load(this.cells)
+    return copied
+  }
+
+  private load(cells: CellData[]) {
+    cells.forEach(c => {
+      this.getCellAt(c.position).possibleNumbers = new Set(c.possibleNumbers)
+    })
+  }
+
+  private updateGroup(group: StatefulGroup) {
     if (group.updated) {
       return
     }
@@ -254,7 +255,7 @@ export class Board {
     })
   }
 
-  updatable(): boolean {
+  private updatable(): boolean {
     if (this.unupdatedCells().length > 0) {
       return true
     }
