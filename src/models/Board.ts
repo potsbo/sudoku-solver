@@ -87,17 +87,21 @@ export class Board {
   private rows: StatefulGroup[] = []
   private columns: StatefulGroup[] = []
 
-  constructor(initial: number[][]) {
+  constructor(initial?: number[][]) {
     const boardCells = getEmptyBoard()
+
     boardCells.forEach(row => {
       row.forEach(cell => {
-        const n = initial[cell.position.row][cell.position.column]
-        if (n > 0 && n < 10) {
-          cell.fixTo(n as Digit, true)
+        if (initial !== undefined) {
+          const n = initial[cell.position.row][cell.position.column]
+          if (n > 0 && n < 10) {
+            cell.fixTo(n as Digit, true)
+          }
         }
         this.cells.push(cell)
       })
     })
+
     allIndices().forEach((i) => {
       this.boxes.push(new BoxData(i))
       this.rows.push(new Row(i))
@@ -128,7 +132,7 @@ export class Board {
     const ret = allIndices().map(_ => allIndices().map(_ => 0))
     this.cells.forEach(cell => {
       const n = cell.fixedNum()
-      if (n === null) { return }
+      if (!cell.isInitial || n === null) { return }
       ret[cell.position.row][cell.position.column] = n
     })
     return ret
@@ -172,9 +176,9 @@ export class Board {
   }
 
   // actions
-  fix(position: CellPosition, n: Digit) {
+  fix(position: CellPosition, n: Digit, asInitial?: boolean) {
     const cell = this.getCellAt(position)
-    const updated = cell.fixTo(n)
+    const updated = cell.fixTo(n, asInitial)
     if (updated) {
       this.publishUpdate(cell)
     }
@@ -378,6 +382,23 @@ export const hardest = () => {
     [0, 0, 1, 0, 0, 0, 0, 6, 8],
     [0, 0, 8, 5, 0, 0, 0, 1, 0],
     [0, 9, 0, 0, 0, 0, 4, 0, 0],
+  ]
+  return new Board(init);
+}
+
+export const anotherHardest = () => {
+  const init = [
+    [0, 8, 0, 0, 0, 0, 1, 5, 0],
+    [4, 0, 6, 5, 0, 9, 0, 8, 0],
+    [0, 0, 0, 0, 0, 8, 0, 0, 0],
+
+    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    [0, 0, 2, 0, 4, 0, 0, 0, 3],
+    [3, 0, 0, 8, 0, 1, 0, 0, 0],
+
+    [9, 0, 0, 0, 7, 0, 0, 0, 0],
+    [6, 0, 0, 0, 0, 0, 0, 0, 4],
+    [1, 5, 0, 0, 0, 0, 0, 9, 0],
   ]
   return new Board(init);
 }

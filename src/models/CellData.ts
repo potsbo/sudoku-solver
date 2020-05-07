@@ -5,7 +5,7 @@ export class CellData {
   updated: boolean
   possibleNumbers: Set<Digit>
   public readonly position: CellPosition
-  private isInitial: boolean
+  isInitial: boolean
 
   constructor(n: Digit | undefined, position: CellPosition) {
     this.updated = true;

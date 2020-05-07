@@ -1,9 +1,9 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import './App.css';
 import styled from 'styled-components'
 import { Box } from './Box'
 import { hardest } from './models/Board'
-import { Solver } from './models/Solver'
+import { Solver, Status } from './models/Solver'
 import { Index } from './models/CellPotision'
 
 const BoxRow = styled.div`
@@ -17,16 +17,20 @@ function App() {
 
   useEffect(() => {
     var start = new Date().getTime();
-    const solver = new Solver(hardest(), true)
+    const solver = new Solver(problem, true)
 
-    const result = solver.solve()
-    const end = new Date().getTime();
-    const time = end - start;
-    console.log('Execution time: ' + time);
-    console.log("finished with", result)
-    setBoxCells(solver.board.boxCells())
+    solver.solve((boxCells) => {
+      setBoxCells(boxCells)
+    }).then((result) => {
+      const end = new Date().getTime();
+      const time = end - start;
+      console.log('Execution time: ' + time);
+      console.log("finished with", result)
+      if (result.status === Status.Completed) {
+        setBoxCells(result.boxCells)
+      }
+    })
   }, [])
-
 
 
   const getBoxRow = (rowIdx: number) => {
