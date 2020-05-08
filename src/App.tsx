@@ -27,7 +27,11 @@ function App() {
       console.log('Execution time: ' + time);
       console.log("finished with", result)
       if (result.status === Status.Completed) {
-        setBoxCells(result.boxCells)
+        if (result.boxCells.length === 1) {
+          setBoxCells(result.boxCells[0])
+        } else {
+          console.log("found more than one solution", result.boxCells.length)
+        }
       }
     })
   }, [])

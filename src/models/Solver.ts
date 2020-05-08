@@ -2,11 +2,29 @@ import { Board } from './Board'
 import { CellData } from './CellData'
 import { Index } from './CellPotision'
 
+type Solution = Map<Index, CellData[]>
+
+const identical = (a: Solution, b: Solution): boolean => {
+  if (a.size !== b.size) {
+    return false
+  }
+
+  const keys = Array.from(a.keys())
+  for (const key of keys) {
+    const aBox = a.get(key)?.map(c => c.fixedNum())
+    const bBox = b.get(key)?.map(c => c.fixedNum())
+    if (JSON.stringify(aBox) !== JSON.stringify(bBox)) {
+      return false
+    }
+  }
+  return true
+}
+
 type Result = {
   status: Status.Stuck | Status.Incompleted | Status.Broken
 } | {
   status: Status.Completed
-  boxCells: Map<Index, CellData[]>
+  boxCells: Solution[]
 }
 
 export enum Status {
@@ -24,6 +42,7 @@ export class Solver {
   private readonly allowedDepth: number
   private readonly delay: number
   private readonly maxSearch: number
+  private solutions: Solution[] = []
 
   constructor(board: Board, bruteForce: boolean, maxDepth?: number, delay?: number) {
     this.allowedDepth = maxDepth || 5
@@ -48,6 +67,7 @@ export class Solver {
     }
 
     while (true) {
+      console.log("true")
       if (callback !== undefined) {
         callback(this.board.boxCells())
       }
@@ -59,9 +79,9 @@ export class Solver {
   }
 
   private async update(callback?: (map: Map<Index, CellData[]>) => void): Promise<Result> {
-    this.board.update()
+    this.board.update(callback)
     if (this.board.completed()) {
-      return { status: Status.Completed, boxCells: this.board.boxCells() }
+      return { status: Status.Completed, boxCells: [this.board.boxCells()] }
     }
     if (!this.board.valid()) {
       return { status: Status.Broken }
@@ -81,7 +101,12 @@ export class Solver {
 
         switch (result.status) {
           case Status.Completed:
-            return result
+            result.boxCells.forEach(solution => {
+              if (this.solutions.find(s => identical(solution, s)) === undefined) {
+                this.solutions.push(solution)
+              }
+            })
+            break
           case Status.Broken:
             this.board.deletePossibleNumberFromPosition(cell.position, dig);
             return { status: Status.Incompleted }
@@ -94,6 +119,6 @@ export class Solver {
       }
     }
 
-    return { status: Status.Stuck }
+    return { status: Status.Completed, boxCells: this.solutions }
   }
 }
