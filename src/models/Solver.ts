@@ -21,7 +21,7 @@ const identical = (a: Solution, b: Solution): boolean => {
 }
 
 type Result = {
-  status: Status.Stuck | Status.Incompleted | Status.Broken
+  status: Status.Incompleted | Status.Broken
 } | {
   status: Status.Completed
   boxCells: Solution[]
@@ -31,7 +31,6 @@ export enum Status {
   Completed = "completed",
   Incompleted = "incompleted",
   Broken = "broken",
-  Stuck = "stuck",
 }
 
 var cnt = 0
