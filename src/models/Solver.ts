@@ -67,7 +67,6 @@ export class Solver {
     }
 
     while (true) {
-      console.log("true")
       if (callback !== undefined) {
         callback(this.board.boxCells())
       }
@@ -79,7 +78,7 @@ export class Solver {
   }
 
   private async update(callback?: (map: Map<Index, CellData[]>) => void): Promise<Result> {
-    this.board.update(callback)
+    this.board.update()
     if (this.board.completed()) {
       return { status: Status.Completed, boxCells: [this.board.boxCells()] }
     }
