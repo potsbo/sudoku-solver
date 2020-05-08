@@ -30,6 +30,7 @@ function App() {
         if (result.boxCells.length === 1) {
           setBoxCells(result.boxCells[0])
         } else {
+          setBoxCells(solver.board.boxCells())
           console.log("found more than one solution", result.boxCells.length)
         }
       }
